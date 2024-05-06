@@ -134,7 +134,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 20,
     borderRadius: 8,
-  }
+  },
+  infoText: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "#333",
+  },
 });
 
 export default styles;
