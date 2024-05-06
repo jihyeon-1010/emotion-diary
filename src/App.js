@@ -25,18 +25,9 @@ const App = () => {
         loadMemos();  
     }, []);
 
-    // 일기 저장
-    const saveMemos = async (memosToSave) => {
-        try {
-            await AsyncStorage.setItem("@memos", JSON.stringify(memosToSave));  
-        }
-        catch (e) {
-            Alert.alert(
-                "에러",
-                "데이터를 불러오는 중 문제가 발생했습니다."
-            );
-        }
-    };
+    useEffect(() => {
+        saveMemos(memos); 
+    }, [memos]);
 
     // AsyncStorage에서 '@memos' 키로 저장된 데이터를 가지고 옴
     const loadMemos = async () => {
@@ -62,9 +53,98 @@ const App = () => {
         setSerchQuery(""); 
     };
 
-    useEffect(() => {
-        saveMemos(memos); 
-    }, [memos]);
+    // 일기 추가 
+    const addMemo = () => {
+        // 텍스트가 비어 있지 않은 경우에만 일기 추가
+        if (txt.trim() !== "") {
+            const currentDate = new Date();
+            const timestamp = currentDate.toISOString(); 
+            const newMemo = { id: timestamp, memo: txt, emotion: selectedEmotion }; 
+            
+            setMemos((prevMemos) => [newMemo, ...prevMemos]); 
+            setWriteMode(false);  
+            setTxt("");  
+            setSelectedEmotion("");   
+        }
+    };
+
+    // 일기 저장
+    const saveMemos = async (memosToSave) => {
+        try {
+            await AsyncStorage.setItem("@memos", JSON.stringify(memosToSave));  
+        }
+        catch (e) {
+            Alert.alert(
+                "에러",
+                "데이터를 불러오는 중 문제가 발생했습니다."
+            );
+        }
+    };
+
+    // 일기 삭제 
+    const deleteMemo = (id) => {
+        Alert.alert(
+            "삭제 확인",
+            "정말로 삭제하시겠습니까?",
+            [
+                {
+                    text: "취소",
+                    style: "cancel",
+                },
+                {
+                    text: "확인",
+                    onPress: () => {
+                        // 선택된 일기를 제외하고 이전 메모 목록은 유지
+                        // 선택된 일기를 제외하고 이전 메모 목록은 유지
+                        setMemos((prevMemos) => prevMemos.filter((memo) => memo.id !== id));
+                        setSerchQuery("");
+                    },
+                    style: "destructive",
+                },
+            ],
+            { cancelable: false }
+        );
+    };
+
+    // 일기 수정
+    const editMemo = (id) => {
+        // 수정할 일기를 찾아 해당 텍스트를 가져와 상태 업데이트
+        const memoToEdit = memos.find((memo) => memo.id === id);
+        if (memoToEdit) {
+            setTxt(memoToEdit.memo);
+            setEditMode(true);
+            setEditedMemoId(id);
+            setSelectedEmotion(memoToEdit.emotion);
+            setSerchQuery("");
+        } else {
+            Alert.alert("에러", "수정할 일기를 찾을 수 없습니다.");
+        }
+    };
+
+    // 일기 업데이트
+    const updateMemo = () => {
+        if (txt.trim() !== "") {
+            const updatedMemos = memos.map((memo) =>
+                memo.id === editedMemoId ? { ...memo, memo: txt, emotion: selectedEmotion } : memo
+            );
+            setMemos(updatedMemos); 
+            setSerchQuery("");  
+            setTxt(""); 
+            setSelectedEmotion(""); 
+            setEditMode(false); 
+        }
+    };
+
+    const searchMemo = () => {
+        Keyboard.dismiss();
+    };
+    
+    // 목록 버튼
+    const returnToFullList = () => {
+        loadMemos();
+        setSerchQuery("");
+        setSelectedEmotion("");
+    };
 
     const renderMemo = ({ item }) => {
         // item의 id를 날짜 형식으로 변환
@@ -112,84 +192,6 @@ const App = () => {
             );
         }
         return null;  // 조건이 충족되지 않으면 아무것도 리턴 X 
-    };
-
-    // 일기 추가 
-    const addMemo = () => {
-        // 텍스트가 비어 있지 않은 경우에만 일기 추가
-        if (txt.trim() !== "") {
-            const currentDate = new Date();
-            const timestamp = currentDate.toISOString(); 
-            const newMemo = { id: timestamp, memo: txt, emotion: selectedEmotion }; 
-            
-            setMemos((prevMemos) => [newMemo, ...prevMemos]); 
-            setWriteMode(false);  
-            setTxt("");  
-            setSelectedEmotion("");   
-        }
-    };
-
-    // 일기 삭제 
-    const deleteMemo = (id) => {
-        Alert.alert(
-            "삭제 확인",
-            "정말로 삭제하시겠습니까?",
-            [
-                {
-                    text: "취소",
-                    style: "cancel",
-                },
-                {
-                    text: "확인",
-                    onPress: () => {
-                        // 선택된 일기를 제외하고 이전 메모 목록은 유지
-                        setMemos((prevMemos) => prevMemos.filter((memo) => memo.id !== id));
-                        setSerchQuery("");  
-                    },
-                    style: "destructive",
-                },
-            ],
-            { cancelable: false }
-        );
-    };
-
-    // 일기 수정
-    const editMemo = (id) => {
-        // 수정할 일기를 찾아 해당 텍스트를 가져와 상태 업데이트
-        setTxt(memos.find((memo) => memo.id === id)?.memo || "");
-        setEditMode(true);  
-        setEditedMemoId(id); 
-        setSerchQuery("");  
-    };
-
-    // 일기 업데이트
-    const updateMemo = () => {
-        if (txt.trim() !== "") {
-            const updatedMemos = memos.map((memo) =>
-                memo.id === editedMemoId ? { ...memo, memo: txt, emotion: selectedEmotion, id: new Date().toISOString() } : memo
-            );
-            const editedIndex = updatedMemos.findIndex((memo) => memo.id === editedMemoId);
-            const editedMemo = updatedMemos[editedIndex];
-            updatedMemos.splice(editedIndex, 1);
-            updatedMemos.unshift(editedMemo)
-
-            setMemos(updatedMemos); 
-            setSerchQuery("");  
-            setTxt(""); 
-            setSelectedEmotion(""); 
-            setEditMode(false); 
-        }
-    };
-
-    const searchMemo = () => {
-        Keyboard.dismiss();
-    };
-    
-    // 목록 버튼
-    const returnToFullList = () => {
-        loadMemos();
-        setSerchQuery("");
-        setSelectedEmotion("");
     };
 
     if (editMode) {
@@ -388,7 +390,6 @@ const App = () => {
                                 <Text style={s.emotionButtonText}>😐</Text>
                             </TouchableOpacity>
 
-                            
                             <TouchableOpacity onPress={returnToFullList} style={s.listButton}>
                                 <Text style={s.listButtonText}>목록</Text>
                             </TouchableOpacity>
