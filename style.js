@@ -129,17 +129,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   infoContainer: {
-  backgroundColor: "#fff",
-  paddingHorizontal: 20,
-  paddingVertical: 10,
-  marginBottom: 20,
-  borderRadius: 8,
-  },
-  infoText: {
-    fontSize: 16,
-    textAlign: "center",
-    color: "#333",
-  },
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginBottom: 20,
+    borderRadius: 8,
+  }
 });
 
 export default styles;
