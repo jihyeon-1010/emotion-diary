@@ -19,7 +19,11 @@ const App = () => {
     const [editMode, setEditMode] = useState(false);  // 일기 수정 모드의 상태 관리
     const [editedMemoId, setEditedMemoId] = useState(null);  // 수정 중인 메모리 id 관리
     const [searchQuery, setSerchQuery] = useState("");  // 검색 쿼리 관리
-    const [selectedEmotion, setSelectedEmotion] = useState("");  // 선택된 감정 관리 
+    const [selectedEmotion, setSelectedEmotion] = useState("");  // 선택된 감정 관리
+
+    useEffect(() => {
+        loadMemos();  
+    }, []);
 
     // 일기 저장
     const saveMemos = async (memosToSave) => {
@@ -39,8 +43,9 @@ const App = () => {
         try {
             const storedMemos = await AsyncStorage.getItem("@memos");
             if (storedMemos !== null) {
-                let parsedMemos = JSON.parse(storedMemos).reverse();  
-                setMemos(parsedMemos);  
+                let parsedMemos = JSON.parse(storedMemos);
+                parsedMemos.sort((a, b) => new Date(b.id) - new Date(a.id));
+                setMemos(parsedMemos);
             }
         }
         catch (e) {
@@ -56,10 +61,6 @@ const App = () => {
         setSelectedEmotion(emotion);
         setSerchQuery(""); 
     };
-
-    useEffect(() => {
-        loadMemos();  
-    }, []);
 
     useEffect(() => {
         saveMemos(memos); 
@@ -124,7 +125,7 @@ const App = () => {
             setMemos((prevMemos) => [newMemo, ...prevMemos]); 
             setWriteMode(false);  
             setTxt("");  
-            setSelectedEmotion("");  
+            setSelectedEmotion("");   
         }
     };
 
@@ -165,12 +166,12 @@ const App = () => {
     const updateMemo = () => {
         if (txt.trim() !== "") {
             const updatedMemos = memos.map((memo) =>
-                memo.id === editedMemoId ? { ...memo, memo: txt, emotion: selectedEmotion } : memo
+                memo.id === editedMemoId ? { ...memo, memo: txt, emotion: selectedEmotion, id: new Date().toISOString() } : memo
             );
             const editedIndex = updatedMemos.findIndex((memo) => memo.id === editedMemoId);
             const editedMemo = updatedMemos[editedIndex];
             updatedMemos.splice(editedIndex, 1);
-            updatedMemos.unshift(editedMemo); 
+            updatedMemos.unshift(editedMemo)
 
             setMemos(updatedMemos); 
             setSerchQuery("");  
@@ -182,7 +183,14 @@ const App = () => {
 
     const searchMemo = () => {
         Keyboard.dismiss();
-    }
+    };
+    
+    // 목록 버튼
+    const returnToFullList = () => {
+        loadMemos();
+        setSerchQuery("");
+        setSelectedEmotion("");
+    };
 
     if (editMode) {
         // 일기 수정 모드 화면 
@@ -378,6 +386,11 @@ const App = () => {
                                 onPress={() => selectEmotion("neutral")}
                             >
                                 <Text style={s.emotionButtonText}>😐</Text>
+                            </TouchableOpacity>
+
+                            
+                            <TouchableOpacity onPress={returnToFullList} style={s.listButton}>
+                                <Text style={s.listButtonText}>목록</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

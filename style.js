@@ -140,6 +140,20 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#333",
   },
+  listButton: {
+    backgroundColor: "#4287f5",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    alignItems: "center",
+    justifyContent: 'center',
+    marginLeft: 20
+  },
+  listButtonText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
 });
 
 export default styles;
